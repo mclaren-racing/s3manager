@@ -64,7 +64,7 @@
                     </thead>
                     <tbody>
                         {{ range .Buckets }}
-                        <tr class="buckets" onclick="location.href='/buckets/{{ .Name }}'">
+                        <tr class="buckets" onclick="location.href='/buckets/{{ .Name | urlPathEscape }}'">
                             <td><i class="material-icons">folder</i>{{ .Name }}</td>
                             <td>{{ .CreationDate }}</td>
                         </tr>

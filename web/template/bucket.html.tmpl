@@ -62,12 +62,13 @@
 <div class="breadcrumbs-bar">
     <div class="container">
         <a href="/buckets" class="breadcrumb">buckets</a>
-        {{ $url := printf "/buckets/%s/" $.BucketName }}
-        <a href="{{ $url }}" class="breadcrumb">{{ $.BucketName }}</a>
+        {{ $bucketUrl := .BucketName | urlPathEscape }}
+        <a href="/buckets/{{ $bucketUrl }}/" class="breadcrumb">{{ .BucketName }}</a>
 
-        {{ range $index, $path := .Paths }}
-        {{ $url = printf "%s%s/" $url $path }}
-        <a href="{{ $url }}" class="breadcrumb">{{ $path }}</a>
+        {{ $currentPathForLink := "" }}
+        {{ range .Paths }}
+            {{ $currentPathForLink = printf "%s%s/" $currentPathForLink (. | urlPathEscape) }}
+            <a href="/buckets/{{ $bucketUrl }}/{{ $currentPathForLink }}" class="breadcrumb">{{ . }}</a>
         {{ end }}
     </div>
 </div>
@@ -88,9 +89,14 @@
 
                 <tbody>
                     {{ range $index, $object := .Objects }}
-                    <tr {{ if $object.IsFolder }} onclick="location.href='/buckets/{{ $.BucketName }}/{{ $object.Key }}'" style="cursor:pointer;" {{ end }}>
+                    <tr {{ if $object.IsFolder }} onclick="location.href='/buckets/{{ $.BucketName | urlPathEscape }}/{{ $object.Key | urlPathEscape }}'" style="cursor:pointer;" {{ end }}>
                         <td>
-                            <i class="material-icons">{{ $object.Icon }}</i> {{ $object.DisplayName }}
+                            <i class="material-icons">{{ $object.Icon }}</i>
+                            {{ if not $object.IsFolder }}
+                            <a href="/api/buckets/{{ $.BucketName | urlPathEscape }}/objects/{{ $object.Key | urlPathEscape }}">{{ $object.DisplayName }}</a>
+                            {{ else }}
+                            {{ $object.DisplayName }}
+                            {{ end }}
                         </td>
                         <td>{{ $object.Size }} bytes</td>
                         <td>{{ $object.Owner }}</td>

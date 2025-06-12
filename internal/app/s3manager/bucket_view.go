@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"path"
 	"regexp"
 	"strings"
@@ -36,8 +37,16 @@ func HandleBucketView(s3 S3, templates fs.FS, allowDelete bool, listRecursive bo
 	return func(w http.ResponseWriter, r *http.Request) {
 		regex := regexp.MustCompile(`\/buckets\/([^\/]*)\/?(.*)`)
 		matches := regex.FindStringSubmatch(r.RequestURI)
-		bucketName := matches[1]
-		path := matches[2]
+		bucketName, err := url.PathUnescape(matches[1])
+		if err != nil {
+			handleHTTPError(w, fmt.Errorf("error unescaping bucket name: %w", err))
+			return
+		}
+		path, err := url.PathUnescape(matches[2])
+		if err != nil {
+			handleHTTPError(w, fmt.Errorf("error unescaping path: %w", err))
+			return
+		}
 
 		var objs []objectWithIcon
 		doneCh := make(chan struct{})
@@ -72,7 +81,10 @@ func HandleBucketView(s3 S3, templates fs.FS, allowDelete bool, listRecursive bo
 			CurrentPath: path,
 		}
 
-		t, err := template.ParseFS(templates, "layout.html.tmpl", "bucket.html.tmpl")
+		t := template.New("layout.html.tmpl").Funcs(template.FuncMap{
+			"urlPathEscape": url.PathEscape,
+		})
+		t, err = t.ParseFS(templates, "layout.html.tmpl", "bucket.html.tmpl")
 		if err != nil {
 			handleHTTPError(w, fmt.Errorf("error parsing template files: %w", err))
 			return

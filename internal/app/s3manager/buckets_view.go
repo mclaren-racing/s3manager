@@ -5,11 +5,12 @@ import (
 	"html/template"
 	"io/fs"
 	"net/http"
+	"net/url"
 
 	"github.com/minio/minio-go/v7"
 )
 
-// HandleBucketsView renders all buckets on an HTML page.
+// HandleBucketsView shows a list of all buckets.
 func HandleBucketsView(s3 S3, templates fs.FS, allowDelete bool) http.HandlerFunc {
 	type pageData struct {
 		Buckets     []minio.BucketInfo
@@ -22,13 +23,15 @@ func HandleBucketsView(s3 S3, templates fs.FS, allowDelete bool) http.HandlerFun
 			handleHTTPError(w, fmt.Errorf("error listing buckets: %w", err))
 			return
 		}
-
 		data := pageData{
 			Buckets:     buckets,
 			AllowDelete: allowDelete,
 		}
 
-		t, err := template.ParseFS(templates, "layout.html.tmpl", "buckets.html.tmpl")
+		t := template.New("layout.html.tmpl").Funcs(template.FuncMap{
+			"urlPathEscape": url.PathEscape,
+		})
+		t, err = t.ParseFS(templates, "layout.html.tmpl", "buckets.html.tmpl")
 		if err != nil {
 			handleHTTPError(w, fmt.Errorf("error parsing template files: %w", err))
 			return
@@ -36,7 +39,6 @@ func HandleBucketsView(s3 S3, templates fs.FS, allowDelete bool) http.HandlerFun
 		err = t.ExecuteTemplate(w, "layout", data)
 		if err != nil {
 			handleHTTPError(w, fmt.Errorf("error executing template: %w", err))
-			return
 		}
 	}
 }
