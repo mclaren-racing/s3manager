@@ -88,19 +88,19 @@
                 </thead>
 
                 <tbody>
-                    {{ range $index, $object := .Objects }}
-                    <tr {{ if $object.IsFolder }} onclick="location.href='/buckets/{{ $.BucketName | urlPathEscape }}/{{ $object.Key | urlPathEscape }}'" style="cursor:pointer;" {{ end }}>
+                    {{ range .Objects }}
+                    <tr style="cursor:pointer;"
+                        {{ if .IsFolder }}
+                        onclick="location.href='/buckets/{{ $.BucketName | urlPathEscape }}/{{ .Key | urlPathEscape }}'"
+                        {{ else }}
+                        onclick="location.href='/api/buckets/{{ $.BucketName | urlPathEscape }}/objects/{{ .Key | urlPathEscape }}'"
+                        {{ end }}>
                         <td>
-                            <i class="material-icons">{{ $object.Icon }}</i>
-                            {{ if not $object.IsFolder }}
-                            <a href="/api/buckets/{{ $.BucketName | urlPathEscape }}/objects/{{ $object.Key | urlPathEscape }}">{{ $object.DisplayName }}</a>
-                            {{ else }}
-                            {{ $object.DisplayName }}
-                            {{ end }}
+                            <i class="material-icons">{{ .Icon }}</i> {{ .DisplayName }}
                         </td>
-                        <td>{{ $object.Size }} bytes</td>
-                        <td>{{ $object.Owner }}</td>
-                        <td>{{ $object.LastModified }}</td>
+                        <td>{{ .Size }} bytes</td>
+                        <td>{{ .Owner }}</td>
+                        <td>{{ .LastModified }}</td>
                     </tr>
                     {{ end }}
                 </tbody>
