@@ -1,31 +1,31 @@
-name: Verify and Push
+name: Build and Push to GHCR
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-  verify:
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: "1.24"
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Lint code
-        uses: golangci/golangci-lint-action@v7
-      - name: Run tests
-        run: make test
-      - name: Log in to Docker Hub
+
+      - name: Log in to the GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: cloudlena
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Set up container image build
-        uses: docker/setup-buildx-action@v3
-      - name: Build and push container image
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
+          context: .
           push: true
-          tags: cloudlena/s3manager:latest
-          platforms: linux/amd64,linux/arm64
+          tags: ghcr.io/${{ github.repository }}:latest
