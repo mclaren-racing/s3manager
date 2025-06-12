@@ -1,6 +1,7 @@
 package s3manager
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -48,6 +49,9 @@ func HandleBucketView(s3 S3, templates fs.FS, allowDelete bool, listRecursive bo
 			return
 		}
 
+		ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+		defer cancel()
+
 		var objs []objectWithIcon
 		doneCh := make(chan struct{})
 		defer close(doneCh)
@@ -55,11 +59,14 @@ func HandleBucketView(s3 S3, templates fs.FS, allowDelete bool, listRecursive bo
 			Recursive: listRecursive,
 			Prefix:    path,
 		}
-		objectCh := s3.ListObjects(r.Context(), bucketName, opts)
+		objectCh := s3.ListObjects(ctx, bucketName, opts)
 		for object := range objectCh {
 			if object.Err != nil {
 				handleHTTPError(w, fmt.Errorf("error listing objects: %w", object.Err))
 				return
+			}
+			if object.Key == path {
+				continue
 			}
 
 			obj := objectWithIcon{
@@ -73,6 +80,7 @@ func HandleBucketView(s3 S3, templates fs.FS, allowDelete bool, listRecursive bo
 			}
 			objs = append(objs, obj)
 		}
+
 		data := pageData{
 			BucketName:  bucketName,
 			Objects:     objs,
