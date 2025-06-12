@@ -11,9 +11,29 @@
 
     <link rel="stylesheet" href="/static/css/material-fonts.css" />
     <link rel="stylesheet" href="/static/css/materialize.min.css" />
+
+    <style>
+        body {
+            background-color: #fafafa;
+        }
+        nav.main-header {
+            background-color: #FF8000; /* Papaya color */
+            height: 48px;
+            line-height: 48px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+        nav.main-header .brand-logo {
+            font-size: 1.4rem;
+        }
+    </style>
 </head>
 
 <body>
+    <nav class="main-header">
+        <div class="nav-wrapper container">
+            <a href="/" class="brand-logo">Isilon S3 Browser</a>
+        </div>
+    </nav>
 
     {{ template "content" . }}
 
