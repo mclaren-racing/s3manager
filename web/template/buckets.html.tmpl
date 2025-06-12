@@ -1,87 +1,99 @@
 {{ define "content" }}
-<nav>
-    <div class="nav-wrapper container">
-        <a href="/" class="brand-logo">S3 Manager</a>
+<style>
+    .breadcrumbs-bar {
+        background-color: #fafafa;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 0.75rem 0;
+    }
+    .breadcrumbs-bar .breadcrumb {
+        font-size: 1.1rem;
+        color: #424242;
+    }
+    .container .section {
+        padding: 2rem 0;
+    }
+    .table-container {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    table.striped {
+        border: none;
+    }
+    table.striped thead {
+        border-bottom: 1px solid #e0e0e0;
+    }
+    table.striped th {
+        font-weight: 500;
+        color: #424242;
+    }
+    table.striped tbody tr:hover {
+        background-color: #f5f5f5 !important;
+    }
+    table.striped td, table.striped th {
+        padding: 12px 15px;
+    }
+    td i.material-icons {
+        vertical-align: middle;
+        margin-right: 10px;
+        color: #757575;
+    }
+    .buckets {
+        cursor: pointer;
+    }
+</style>
+
+<div class="breadcrumbs-bar">
+    <div class="container">
+        <span class="breadcrumb">buckets</span>
     </div>
-</nav>
+</div>
 
 <div class="container">
     <div class="section">
         <div class="row">
-
             {{ if .Buckets }}
-            {{ range $bucket := .Buckets }}
-            <div class="col l6 m12">
-                <a href="/buckets/{{ $bucket.Name }}" style="color:black;">
-                    <div class="card">
-                        <div class="card-content">
-                            <div class="row">
-                                <div class="col">
-                                    <i class="material-icons large">folder_open</i>
-                                </div>
-                                <div class="col">
-                                    <span class="card-title">
-                                        {{ $bucket.Name }}
-                                    </span>
-                                    <p style="color:gray;">Created on {{ $bucket.CreationDate }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
+            <div class="table-container">
+                <table class="striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Creation Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ range .Buckets }}
+                        <tr class="buckets" onclick="location.href='/buckets/{{ .Name | urlPathEscape }}'">
+                            <td><i class="material-icons">folder</i>{{ .Name }}</td>
+                            <td>{{ .CreationDate }}</td>
+                        </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
             </div>
-            {{ end }}
-            {{ end }}
-
-            {{ if not .Buckets }}
+            {{ else }}
             <p style="text-align:center;margin-top:2em;color:gray;">No buckets yet</p>
             {{ end }}
-
         </div>
     </div>
 </div>
 
-<div class="fixed-action-btn">
-    <button type="button" class="btn-floating btn-large red modal-trigger" data-target="modal-create-bucket">
-        <i class="material-icons large">add</i>
-    </button>
-</div>
-
-<div id="modal-create-bucket" class="modal">
-    <form id="create-bucket-form">
-        <div class="modal-content">
-            <h4>Create Bucket</h4>
-            <br>
-            <div class="row">
-                <div class="input-field col m6">
-                    <input id="name" type="text" name="name" placeholder="My Bucket">
-                    <label for="name">Name</label>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal-footer">
-            <button type="button" class="modal-close waves-effect waves-green btn-flat">Cancel</button>
-            <button type="button" class="modal-close waves-effect waves-green btn" onclick="createBucket()">Create</button>
-        </div>
-    </form>
-</div>
-
 <script>
-    function createBucket() {
-        var formData = {};
-        $.each($('#create-bucket-form')
-            .serializeArray(), function(i, field) {
-                formData[field.name] = field.value;
+    document.addEventListener("DOMContentLoaded", function() {
+        const table = document.querySelector(".table-container table");
+        if (table) {
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+
+            rows.sort((a, b) => {
+                const nameA = a.cells[0].textContent.trim().toLowerCase();
+                const nameB = b.cells[0].textContent.trim().toLowerCase();
+                return nameA.localeCompare(nameB);
             });
-        $.ajax({
-            type: 'POST',
-            url: '/api/buckets',
-            data: JSON.stringify(formData),
-            dataType: 'json',
-            contentType: 'application/json; charset=utf-8',
-            success: function() { location.reload(); }
-        });
-    }
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    });
 </script>
 {{ end }}
